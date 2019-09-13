@@ -60,15 +60,15 @@
 
 /* external globals */
 
-extern const char   CMD_UDP[];
-extern const char   CMD_STATUS[];
-extern const char   CMD_RESTART[];
-extern const char   CMD_RTP[];
+extern char * CMD_UDP;
+extern char * CMD_STATUS;
+extern char * CMD_RESTART;
+extern char * CMD_RTP;
 
-extern const size_t CMD_UDP_LEN;
-extern const size_t CMD_STATUS_LEN;
-extern const size_t CMD_RESTART_LEN;
-extern const size_t CMD_RTP_LEN;
+extern size_t CMD_UDP_LEN;
+extern size_t CMD_STATUS_LEN;
+extern size_t CMD_RESTART_LEN;
+extern size_t CMD_RTP_LEN;
 
 extern const char   IPv4_ALL[];
 
@@ -1196,13 +1196,15 @@ udpxy_main( int argc, char* const argv[] )
     char pidfile[ MAXPATHLEN ] = "\0";
     u_short MIN_MCAST_REFRESH = 0, MAX_MCAST_REFRESH = 0;
 
+    char * tmp;
+
 /* support for -r -w (file read/write) option is disabled by default;
  * those features are experimental and for dev debugging ONLY
  * */
 #ifdef UDPXY_FILEIO
-    static const char UDPXY_OPTMASK[] = "TvSa:l:p:m:c:B:n:R:r:w:H:M:";
+    static const char UDPXY_OPTMASK[] = "TvSa:l:p:m:c:B:n:R:u:r:w:H:M:";
 #else
-    static const char UDPXY_OPTMASK[] = "TvSa:l:p:m:c:B:n:R:H:M:";
+    static const char UDPXY_OPTMASK[] = "TvSa:l:p:m:c:B:n:R:u:H:M:";
 #endif
 
     struct sigaction qact, iact, cact, oldact;
@@ -1211,6 +1213,17 @@ udpxy_main( int argc, char* const argv[] )
     (void) get_pidstr( PID_RESET, "S" );
 
     rc = init_uopt( &g_uopt );
+
+    CMD_UDP     = strdup("udp");
+    CMD_STATUS  = strdup("status");
+    CMD_RESTART = strdup("restart");
+    CMD_RTP     = strdup("rtp");
+
+    CMD_UDP_LEN     = sizeof(CMD_UDP);
+    CMD_STATUS_LEN  = sizeof(CMD_STATUS);
+    CMD_RESTART_LEN = sizeof(CMD_RESTART);
+    CMD_RTP_LEN     = sizeof(CMD_RTP);
+
     while( (0 == rc) && (-1 != (ch = getopt(argc, argv, UDPXY_OPTMASK))) ) {
         switch( ch ) {
             case 'v': set_verbose( &g_uopt.is_verbose );
@@ -1351,6 +1364,29 @@ udpxy_main( int argc, char* const argv[] )
                             rc = ERR_PARAM;
                             break;
                        }
+                      break;
+
+            case 'u':
+                      tmp=strdup(CMD_UDP);
+                      sprintf(CMD_UDP,     "%s-%s", optarg, tmp);
+                      free(tmp);
+
+                      tmp=strdup(CMD_STATUS);
+                      sprintf(CMD_STATUS,  "%s-%s", optarg, tmp);
+                      free(tmp);
+
+                      tmp=strdup(CMD_RESTART);
+                      sprintf(CMD_RESTART, "%s-%s", optarg, tmp);
+                      free(tmp);
+
+                      tmp=strdup(CMD_RTP);
+                      sprintf(CMD_RTP,     "%s-%s", optarg, tmp);
+                      free(tmp);
+
+                      CMD_UDP_LEN     = sizeof(CMD_UDP);
+                      CMD_STATUS_LEN  = sizeof(CMD_STATUS);
+                      CMD_RESTART_LEN = sizeof(CMD_RESTART);
+                      CMD_RTP_LEN     = sizeof(CMD_RTP);
                       break;
 
             case ':':
